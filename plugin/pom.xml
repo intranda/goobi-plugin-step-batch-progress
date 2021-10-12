@@ -5,7 +5,7 @@
   <version>1.0.0</version>
   <packaging>pom</packaging>
   <properties>
-    <goobi.version>21.08.3</goobi.version>
+    <goobi.version>21.09</goobi.version>
   </properties>
   <distributionManagement>
     <repository>
@@ -21,7 +21,7 @@
   </repositories>
   <modules>
     <module>module-main</module>
-<!--     <module>module-gui</module> -->
+    <!--     <module>module-gui</module> -->
   </modules>
   <dependencies>
     <dependency>
