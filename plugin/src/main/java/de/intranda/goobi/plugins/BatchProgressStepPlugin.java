@@ -23,8 +23,20 @@ import java.util.ArrayList;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+
+import org.apache.commons.configuration.SubnodeConfiguration;
+import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
+import org.goobi.aeon.LoginResponse;
+import org.goobi.aeon.User;
 import org.goobi.beans.Process;
+import org.goobi.beans.Processproperty;
 import org.goobi.beans.Step;
 import org.goobi.production.enums.PluginGuiType;
 import org.goobi.production.enums.PluginReturnValue;
@@ -32,6 +44,7 @@ import org.goobi.production.enums.PluginType;
 import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
 
+import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.HelperSchritte;
 import de.sub.goobi.persistence.managers.ProcessManager;
 import lombok.Getter;
@@ -54,11 +67,45 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
 
     private Process process;
 
+    // aeon authentication parameter
+    private String aeonUrl;
+    private User user;
+    private String propertyName;
+    private String newStatusName;
+
     @Override
     public void initialize(Step step, String returnPath) {
         this.returnPath = returnPath;
         this.step = step;
         process = step.getProzess();
+
+        // read global configuration
+        XMLConfiguration config = ConfigPlugins.getPluginConfig(title);
+        config.setExpressionEngine(new XPathExpressionEngine());
+
+        aeonUrl = config.getString("/global/aeon/url");
+        user = new User(config.getString("/global/aeon/username"), config.getString("/global/aeon/password"));
+        propertyName = config.getString("/global/property");
+
+        // get config for current task
+        SubnodeConfiguration myconfig = null;
+        String projectName = process.getProjekt().getTitel();
+        try {
+            myconfig = config.configurationAt("//config[./project = '" + projectName + "'][./step = '" + step.getTitel() + "']");
+        } catch (IllegalArgumentException e) {
+            try {
+                myconfig = config.configurationAt("//config[./project = '*'][./step = '" + step.getTitel() + "']");
+            } catch (IllegalArgumentException e1) {
+                try {
+                    myconfig = config.configurationAt("//config[./project = '" + projectName + "'][./step = '*']");
+                } catch (IllegalArgumentException e2) {
+                    myconfig = config.configurationAt("//config[./project = '*'][./step = '*']");
+                }
+            }
+        }
+
+        newStatusName = myconfig.getString("queueName");
+
     }
 
     @Override
@@ -150,8 +197,49 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
         }
 
         // we reached this, so we don't have any locked steps
-        // TODO call rest api
 
+        // now call rest api
+
+        String transactionId = null;
+        // get transactionNumber from process properties
+        for (Processproperty pp : process.getEigenschaften()) {
+            // must match field title of field <field aeon="transactionNumber"> in aeon config
+            if (pp.getTitel().equals(propertyName)) {
+                transactionId = pp.getWert();
+            }
+        }
+        // login
+        Client client = ClientBuilder.newClient();
+
+        LoginResponse res = client.target(aeonUrl)
+                .path("Token")
+                .request(MediaType.APPLICATION_JSON)
+                .post(Entity.entity(user, MediaType.APPLICATION_JSON), LoginResponse.class);
+
+        //        body application/json
+        //        {
+        //            "newStatus": "string"
+        //        }
+        Map<String, String> map = new HashMap<>();
+        map.put("newStatus", newStatusName);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> answer = client.target(aeonUrl)
+        .path("Requests")
+        .path(transactionId)
+        .path("route")
+        .request(MediaType.APPLICATION_JSON)
+        .header("Authorization", "BEARER " + res.getAccessToken())
+        .post(Entity.entity(map, MediaType.APPLICATION_JSON), Map.class);
+        System.out.println(answer.get("transactionStatus"));
+
+        /*
+        // https://aeon-test-mssa.library.yale.edu/api/swagger/#!/Requests/RequestsByIdRoutePost
+        post /Requests/{id}/route
+
+        A model that contains the Queue ID or Queue Name of the status the transaction is being routed to.
+
+         */
         // close the step in all other processes
         if (!stepsToClose.isEmpty()) {
             HelperSchritte hs = new HelperSchritte();

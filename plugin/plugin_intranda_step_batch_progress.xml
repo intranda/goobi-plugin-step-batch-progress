@@ -1,21 +1,33 @@
 <config_plugin>
+    <global>
+        <aeon>
+            <url>https://example.com</url>
+            <username>user</username>
+            <password>pw</password>
+        </aeon>
+        <!-- must match field title of field <field aeon="transactionNumber"> in aeon config -->
+        <property>Transaction Identifier</property>
+    </global>
     <!--
         order of configuration is:
-          1.) project name and step name matches
-          2.) step name matches and project is *
-          3.) project name matches and step name is *
-          4.) project name and step name are *
-	-->
-    
+        1.) project name and step name matches
+        2.) step name matches and project is *
+        3.) project name matches and step name is *
+        4.) project name and step name are *
+    -->
     <config>
         <!-- which projects to use for (can be more then one, otherwise use *) -->
         <project>*</project>
         <step>*</step>
-        
-        <!-- sample parameter -->
-        <value>test</value>
-        <!-- display button to finish the task directly from within the entered plugin -->
-        <allowTaskFinishButtons>true</allowTaskFinishButtons>
+        <!-- name of the new queue/status
+        Examples:
+        4   Submitted by Staff
+        8   Awaiting Order Processing
+        10  In Item Retrieval
+        111 Order Finished
+        1142    DIVY-Item Checked Out to Staff
+	    1158	Arrived at DRMS
+         -->
+        <queueName>Order Finished</queueName>
     </config>
-
 </config_plugin>
