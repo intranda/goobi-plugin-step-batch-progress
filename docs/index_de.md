@@ -1,0 +1,126 @@
+---
+description: >-
+  Dieses Step Plugin für Goobi workflow ermöglicht es, alle Vorgänge eines Batches zum gleichen Fortschritt kommen zu lassen, einen REST-Aufruf auszulösen und im Anschluß daran alle Prozesse wieder parallel weiterarbeiten zu lassen.
+  
+---
+
+Batch Progress Plugin
+===========================================================================
+
+
+Einführung
+---------------------------------------------------------------------------
+Dieses Step Plugin für Goobi workflow erlaubt, dass mehrere Goobi Vorgänge, die zu einem Batch gehören aber einen unterschiedlichen Fortschritt in ihren Workflows haben, alle an eine festgelegten Arbeitsschritt des Workflows auf einander warten. Erst wenn der letzte zugehörige Vorgang den definierten Arbeitsschritt des Workflows erreicht, findet ein Aufruf einer festgelegten REST-URL statt, so dass anschließend alle Vorgänge mit ihren jeweils nächsten Arbeitsschritten fortfahren können.
+
+Der initiale Einsatzzweck dieses Plugins zielt auf den Aufruf von AEON REST URLs, um darin den Fortschritt der Goobi Workflows zu protokollieren. Weitere Einsatzzwecke für dieses Plugin sind möglich, erfordern unter Umständen allerdings Anpassungsarbeiten an dem Plugin.
+
+
+Übersicht
+---------------------------------------------------------------------------
+
+Details             |  Erläuterung
+------------------- | -----------------------------------------------------
+Identifier          | intranda_step_batch_progress
+Source code         | [https://github.com/intranda/goobi-plugin-step-batch-progress](https://github.com/intranda/goobi-plugin-step-batch-progress)
+Lizenz              | GPL 2.0 oder neuer 
+Dokumentationsdatum | 20.10.2021 
+
+
+Installation
+---------------------------------------------------------------------------
+Das Plugin besteht insgesamt aus den folgenden zu installierenden Dateien:
+
+```text
+plugin_intranda_step_batch_progress.jar
+plugin_intranda_step_batch_progress-GUI.jar
+plugin_intranda_step_batch_progress.xml
+```
+
+Diese Dateien müssen in den richtigen Verzeichnissen installiert werden, so dass diese nach der Installation unter den folgenden Pfaden vorliegen:
+
+```bash
+/opt/digiverso/goobi/plugins/step/plugin_intranda_step_batch_progress.jar
+/opt/digiverso/goobi/config/plugin_intranda_step_batch_progress.xml
+```
+
+
+Konfiguration
+---------------------------------------------------------------------------
+Die Konfiguration des Plugins erfolgt über die Konfigurationsdatei `plugin_intranda_step_batch_progress.xml` und kann im laufenden Betrieb angepasst werden. Im folgenden ist eine beispielhafte Konfigurationsdatei aufgeführt:
+
+```xml
+<config_plugin>
+    <global>
+        <aeon>
+            <url>https://example.com</url>
+            <username>user</username>
+            <password>pw</password>
+        </aeon>
+        <!-- must match field title of field <field aeon="transactionNumber"> in aeon config -->
+        <property>Transaction Identifier</property>
+    </global>
+    <!--
+        order of configuration is:
+        1.) project name and step name matches
+        2.) step name matches and project is *
+        3.) project name matches and step name is *
+        4.) project name and step name are *
+    -->
+    <config>
+        <!-- which projects to use for (can be more then one, otherwise use *) -->
+        <project>*</project>
+        <step>*</step>
+        <!-- name of the new queue/status
+             Examples:
+        
+             4     Submitted by Staff
+             8     Awaiting Order Processing
+             10    In Item Retrieval
+             111   Order Finished
+             1142  DIVY-Item Checked Out to Staff
+             1158  Arrived at DRMS
+         -->
+        <queueName>Order Finished</queueName>
+    </config>
+</config_plugin>
+```
+
+Innerhalb der Konfigurationsdatei können verschiedene Parameter konfiguriert werden. Die Datei ist in zwei Bereiche aufgeteilt. Im Bereich `<global>` werden allgemein gültige Informationen wie die Zugangsdaten zu AEON verwaltet. Hier sind folgende Parameter vorhanden:
+
+Parameter           |  Erläuterung
+------------------- | ----------------------------------------------------- 
+`url`               | Geben Sie hier die URL für die API von AEON an.
+`username`          | Definieren Sie hier den zu verwendenden Nutzernamen.
+`password`          | Tragen Sie hier das Passwort für den Zugriff auf die API ein.
+
+Daneben gibt es den zweiten Bereich `<config>`, in dem für einzelne Arbeitsschritte unterschiedliche Angaben vorgenommen werden können. Hier kann für einzelne Projekte und Schritte festgelegt werden, in welche Queue der Datensatz geschrieben werden soll. 
+
+Der Block `<config>` kann für verschiedene Projekte oder Arbeitsschritte wiederholt vorkommen, um innerhalb verschiedener Workflows unterschiedliche Aktionen durchführen zu können und auch um für verschiedener Schritte einen unterschiedlichen Status in AEON setzen zu können. Die weiteren Parameter innerhalb dieser Konfigurationsdatei haben folgende Bedeutungen:
+
+Parameter           |  Erläuterung
+------------------- | ----------------------------------------------------- 
+`project`           | Dieser Parameter legt fest, für welches Projekt der aktuelle Block `<config>` gelten soll. Verwendet wird hierbei der Name des Projektes. Dieser Parameter kann mehrfach pro `<config>` Block vorkommen.
+`step`              | Dieser Parameter steuert, für welche Arbeitsschritte der Block `<config>` gelten soll. Verwendet wird hier der Name des Arbeitsschritts. Dieser Parameter kann mehrfach pro `<config>` Block vorkommen.
+`<queueName>`       | Name der Aeon Queue, die aktualisiert werden soll
+
+
+Integration des Plugins in den Workflow
+---------------------------------------------------------------------------
+Zur Inbetriebnahme des Plugins muss dieses für einen oder mehrere gewünschte Aufgaben im Workflow aktiviert werden. Dies erfolgt wie im folgenden Screenshot aufgezeigt durch Auswahl des Plugins `intranda_step_batch_progress` aus der Liste der installierten Plugins.
+
+![Zuweisung des Plugins zu einer bestimmten Aufgabe](plugin_intranda_step_batch_progress_de.png)
+
+Da dieses Plugin üblicherweise automatisch ausgeführt werden soll, sollte der Arbeitsschritt im Workflow als `automatisch` konfiguriert werden.
+
+
+Arbeitsweise des Plugins
+---------------------------------------------------------------------------
+Nachdem das Plugin vollständig installiert und eingerichtet wurde, wird es üblicherweise automatisch innerhalb des Workflows ausgeführt, so dass keine manuelle Interaktion mit dem Nutzer erfolgt. Stattdessen erfolgt der Aufruf des Plugins durch den Workflow im Hintergrund und führt die folgenden Arbeiten durch: 
+
+Als erstes geprüft, ob der Vorgang zu einem Batch gehört. Ist dies nicht der Fall, wird der Arbeitsschritt geschlossen und der weitere Workflow wird gestartet.
+
+Ansonsten wird geprüft, ob der aktuelle Arbeitsschritt in allen Vorgängen des Batches bereits erreicht wurde (der Status darf nicht `Gesperrt` sein). Falls dies noch nicht der Fall ist, bleibt der Schritt im Status `In Bearbeitung` stehen.
+
+Wenn jedoch alle anderen Vorgänge des Batches den Arbeitsschritt erreicht haben oder es nur den aktuellen Vorgang im Batch gibt, wird ein neuer Status in AEON gesetzt. Hierzu wird in den Eigenschaften des Vorgangs nach der Eigenschaft `transaction identifier` gesucht, mit dem die Vorgänge initial angelegt wurden. Dieser Datensatz wird dann in AEON aufgerufen, um den konfigurierte `queueName` als neuen Status zu setzen.
+
+Anschließend wird der aktuelle Arbeitsschritt in allen Vorgängen des Batches geschlossen und der weitere Workflow fortgeführt.
