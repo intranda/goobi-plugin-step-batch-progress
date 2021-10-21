@@ -72,6 +72,7 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
     private User user;
     private String propertyName;
     private String newStatusName;
+    private boolean updateAeonQueue;
 
     @Override
     public void initialize(Step step, String returnPath) {
@@ -104,8 +105,8 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
             }
         }
 
-        newStatusName = myconfig.getString("queueName");
-
+        updateAeonQueue = myconfig.getBoolean("updateQueue", false);
+        newStatusName = myconfig.getString("queueName", "");
     }
 
     @Override
@@ -199,47 +200,37 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
         // we reached this, so we don't have any locked steps
 
         // now call rest api
-
-        String transactionId = null;
-        // get transactionNumber from process properties
-        for (Processproperty pp : process.getEigenschaften()) {
-            // must match field title of field <field aeon="transactionNumber"> in aeon config
-            if (pp.getTitel().equals(propertyName)) {
-                transactionId = pp.getWert();
+        if (updateAeonQueue) {
+            String transactionId = null;
+            // get transactionNumber from process properties
+            for (Processproperty pp : process.getEigenschaften()) {
+                // must match field title of field <field aeon="transactionNumber"> in aeon config
+                if (pp.getTitel().equals(propertyName)) {
+                    transactionId = pp.getWert();
+                }
             }
+            // login
+            Client client = ClientBuilder.newClient();
+
+            LoginResponse res = client.target(aeonUrl)
+                    .path("Token")
+                    .request(MediaType.APPLICATION_JSON)
+                    .post(Entity.entity(user, MediaType.APPLICATION_JSON), LoginResponse.class);
+
+            Map<String, String> map = new HashMap<>();
+            map.put("newStatus", newStatusName);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> answer = client.target(aeonUrl)
+            .path("Requests")
+            .path(transactionId)
+            .path("route")
+            .request(MediaType.APPLICATION_JSON)
+            .header("Authorization", "BEARER " + res.getAccessToken())
+            .post(Entity.entity(map, MediaType.APPLICATION_JSON), Map.class);
+            System.out.println(answer.get("transactionStatus"));
+
         }
-        // login
-        Client client = ClientBuilder.newClient();
-
-        LoginResponse res = client.target(aeonUrl)
-                .path("Token")
-                .request(MediaType.APPLICATION_JSON)
-                .post(Entity.entity(user, MediaType.APPLICATION_JSON), LoginResponse.class);
-
-        //        body application/json
-        //        {
-        //            "newStatus": "string"
-        //        }
-        Map<String, String> map = new HashMap<>();
-        map.put("newStatus", newStatusName);
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> answer = client.target(aeonUrl)
-        .path("Requests")
-        .path(transactionId)
-        .path("route")
-        .request(MediaType.APPLICATION_JSON)
-        .header("Authorization", "BEARER " + res.getAccessToken())
-        .post(Entity.entity(map, MediaType.APPLICATION_JSON), Map.class);
-        System.out.println(answer.get("transactionStatus"));
-
-        /*
-        // https://aeon-test-mssa.library.yale.edu/api/swagger/#!/Requests/RequestsByIdRoutePost
-        post /Requests/{id}/route
-
-        A model that contains the Queue ID or Queue Name of the status the transaction is being routed to.
-
-         */
         // close the step in all other processes
         if (!stepsToClose.isEmpty()) {
             HelperSchritte hs = new HelperSchritte();
