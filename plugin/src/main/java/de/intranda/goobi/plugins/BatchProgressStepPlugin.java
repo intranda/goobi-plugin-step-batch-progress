@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
+import org.apache.commons.lang.StringUtils;
 import org.goobi.aeon.LoginResponse;
 import org.goobi.aeon.User;
 import org.goobi.beans.Process;
@@ -70,6 +71,8 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
     // aeon authentication parameter
     private String aeonUrl;
     private User user;
+    private String apiKey;
+
     private String propertyName;
     private String newStatusName;
     private boolean updateAeonQueue;
@@ -85,6 +88,7 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
         config.setExpressionEngine(new XPathExpressionEngine());
 
         aeonUrl = config.getString("/global/aeon/url");
+        apiKey = config.getString("/global/aeon/apiKey");
         user = new User(config.getString("/global/aeon/username"), config.getString("/global/aeon/password"));
         propertyName = config.getString("/global/property");
 
@@ -212,23 +216,30 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
             // login
             Client client = ClientBuilder.newClient();
 
-            LoginResponse res = client.target(aeonUrl)
-                    .path("Token")
-                    .request(MediaType.APPLICATION_JSON)
-                    .post(Entity.entity(user, MediaType.APPLICATION_JSON), LoginResponse.class);
-
             Map<String, String> map = new HashMap<>();
             map.put("newStatus", newStatusName);
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> answer = client.target(aeonUrl)
-            .path("Requests")
-            .path(transactionId)
-            .path("route")
-            .request(MediaType.APPLICATION_JSON)
-            .header("Authorization", "BEARER " + res.getAccessToken())
-            .post(Entity.entity(map, MediaType.APPLICATION_JSON), Map.class);
-            System.out.println(answer.get("transactionStatus"));
+            if (StringUtils.isNotBlank(apiKey)) {
+                client.target(aeonUrl)
+                .path("Requests")
+                .path(transactionId)
+                .path("route")
+                .request(MediaType.APPLICATION_JSON)
+                .header("X-AEON-API-KEY", apiKey)
+                .post(Entity.entity(map, MediaType.APPLICATION_JSON), Map.class);
+            } else {
+                LoginResponse res = client.target(aeonUrl)
+                        .path("Token")
+                        .request(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(user, MediaType.APPLICATION_JSON), LoginResponse.class);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> answer = client.target(aeonUrl)
+                .path("Requests")
+                .path(transactionId)
+                .path("route")
+                .request(MediaType.APPLICATION_JSON)
+                .header("Authorization", "BEARER " + res.getAccessToken())
+                .post(Entity.entity(map, MediaType.APPLICATION_JSON), Map.class);
+            }
 
         }
         // close the step in all other processes
