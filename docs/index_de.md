@@ -70,7 +70,10 @@ Die Konfiguration des Plugins erfolgt über die Konfigurationsdatei `plugin_intr
         <!-- which projects to use for (can be more then one, otherwise use *) -->
         <project>*</project>
         <step>*</step>
-        <!-- name of the new queue/status
+        <!-- define if a queue in AEON shall be updated, which would then 
+          use the following parameter for the queue name -->
+        <updateQueue>true</updateQueue>
+        <!-- name of the AEON queue/status to be updated if this is activated
              Examples:
         
              4     Submitted by Staff
@@ -101,6 +104,7 @@ Parameter           |  Erläuterung
 ------------------- | ----------------------------------------------------- 
 `project`           | Dieser Parameter legt fest, für welches Projekt der aktuelle Block `<config>` gelten soll. Verwendet wird hierbei der Name des Projektes. Dieser Parameter kann mehrfach pro `<config>` Block vorkommen.
 `step`              | Dieser Parameter steuert, für welche Arbeitsschritte der Block `<config>` gelten soll. Verwendet wird hier der Name des Arbeitsschritts. Dieser Parameter kann mehrfach pro `<config>` Block vorkommen.
+`<updateQueue>`     | Hier läßt sich festlegen, ob ein Update einer Queue in AEON stattfinden soll oder nicht. Wenn der Parameter fehlt, wird `false` angenommen.
 `<queueName>`       | Name der Aeon Queue, die aktualisiert werden soll
 
 
@@ -121,6 +125,6 @@ Als erstes geprüft, ob der Vorgang zu einem Batch gehört. Ist dies nicht der F
 
 Ansonsten wird geprüft, ob der aktuelle Arbeitsschritt in allen Vorgängen des Batches bereits erreicht wurde (der Status darf nicht `Gesperrt` sein). Falls dies noch nicht der Fall ist, bleibt der Schritt im Status `In Bearbeitung` stehen.
 
-Wenn jedoch alle anderen Vorgänge des Batches den Arbeitsschritt erreicht haben oder es nur den aktuellen Vorgang im Batch gibt, wird ein neuer Status in AEON gesetzt. Hierzu wird in den Eigenschaften des Vorgangs nach der Eigenschaft `transaction identifier` gesucht, mit dem die Vorgänge initial angelegt wurden. Dieser Datensatz wird dann in AEON aufgerufen, um den konfigurierte `queueName` als neuen Status zu setzen.
+Wenn jedoch alle anderen Vorgänge des Batches den Arbeitsschritt erreicht haben oder es nur den aktuellen Vorgang im Batch gibt, wird ein neuer Status in AEON gesetzt, sofern dies mit dem Parameter `updateQueue` aktiviert wurde. Hierzu wird in den Eigenschaften des Vorgangs nach der Eigenschaft `transaction identifier` gesucht, mit dem die Vorgänge initial angelegt wurden. Dieser Datensatz wird dann in AEON aufgerufen, um den konfigurierte `queueName` als neuen Status zu setzen.
 
 Anschließend wird der aktuelle Arbeitsschritt in allen Vorgängen des Batches geschlossen und der weitere Workflow fortgeführt.
