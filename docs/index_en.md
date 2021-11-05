@@ -53,6 +53,7 @@ The plugin is configured via the configuration file `plugin_intranda_step_batch_
     <global>
         <aeon>
             <url>https://example.com</url>
+            <apiKey>1234567890</apiKey>
             <username>user</username>
             <password>pw</password>
         </aeon>
@@ -93,6 +94,7 @@ Various parameters can be configured within the configuration file. The file is 
 Parameter           |  Description
 ------------------- | ----------------------------------------------------- 
 `url`               | Enter the URL for the API of AEON here.
+`apiKey`            | A key can be specified here that is to be used instead of the login and password.
 `username`          | Define the user name to be used here.
 `password`          | Enter the password for accessing the API here.
 
