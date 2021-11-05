@@ -53,6 +53,7 @@ Die Konfiguration des Plugins erfolgt über die Konfigurationsdatei `plugin_intr
     <global>
         <aeon>
             <url>https://example.com</url>
+            <apiKey>1234567890</apiKey>
             <username>user</username>
             <password>pw</password>
         </aeon>
@@ -93,6 +94,7 @@ Innerhalb der Konfigurationsdatei können verschiedene Parameter konfiguriert we
 Parameter           |  Erläuterung
 ------------------- | ----------------------------------------------------- 
 `url`               | Geben Sie hier die URL für die API von AEON an.
+`apiKey`            | Hier kann ein Key festgelegt werden, der statt Login und Passwort verwendet werden soll.
 `username`          | Definieren Sie hier den zu verwendenden Nutzernamen.
 `password`          | Tragen Sie hier das Passwort für den Zugriff auf die API ein.
 
