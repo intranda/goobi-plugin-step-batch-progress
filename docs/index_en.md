@@ -107,7 +107,7 @@ Parameter           |  Description
 `project`           | This parameter determines for which project the current block `<config>` should apply. The name of the project is used here. This parameter can occur several times per `<config>` block.
 `step`              | This parameter controls which workflow steps the `<config>` block should apply to. The name of the workflow step is used here. This parameter can occur several times per `<config>` block.
 `<updateQueue>`     | Here you can define whether an update of a queue in AEON should take place or not. If the parameter is missing, `false` is assumed.
-`<queueName>`       | Name der Aeon Queue, die aktualisiert werden soll
+`<queueName>`       | Name of the Aeon Queue to be updated
 
 
 Integration of the plugin into the workflow
