@@ -70,7 +70,10 @@ The plugin is configured via the configuration file `plugin_intranda_step_batch_
         <!-- which projects to use for (can be more then one, otherwise use *) -->
         <project>*</project>
         <step>*</step>
-        <!-- name of the new queue/status
+        <!-- define if a queue in AEON shall be updated, which would then 
+          use the following parameter for the queue name -->
+        <updateQueue>true</updateQueue>
+        <!-- name of the AEON queue/status to be updated if this is activated
              Examples:
         
              4     Submitted by Staff
@@ -101,6 +104,7 @@ Parameter           |  Description
 ------------------- | ----------------------------------------------------- 
 `project`           | This parameter determines for which project the current block `<config>` should apply. The name of the project is used here. This parameter can occur several times per `<config>` block.
 `step`              | This parameter controls which workflow steps the `<config>` block should apply to. The name of the workflow step is used here. This parameter can occur several times per `<config>` block.
+`<updateQueue>`     | Here you can define whether an update of a queue in AEON should take place or not. If the parameter is missing, `false` is assumed.
 `<queueName>`       | Name der Aeon Queue, die aktualisiert werden soll
 
 
@@ -121,6 +125,6 @@ First, it is checked whether the process belongs to a batch. If this is not the 
 
 Otherwise, it is checked whether the current workflow step has already been reached in all processes of the batch (the status must not be `Locked`). If this is not yet the case, the step remains in the status `In Work`.
 
-However, if all other processes in the batch have reached the workflow step or there is only the current process in the batch, a new status is set in AEON. To do this, a search is made in the properties of the process for the `transaction identifier` property with which the processes were initially created. This record is then called up in AEON to set the configured `queueName` as the new status.
+However, if all other processes in the batch have reached the workflow step or there is only the current process in the batch, a new status is set in AEON if this has been activated with the parameter `updateQueue`. To do this, a search is made in the properties of the process for the `transaction identifier` property with which the processes were initially created. This record is then called up in AEON to set the configured `queueName` as the new status.
 
 The current workflow step in all processes of the batch is then closed and the rest of the workflow continues.
