@@ -5,7 +5,7 @@
   <version>1.0.0</version>
   <packaging>pom</packaging>
   <properties>
-    <goobi.version>21.09.2</goobi.version>
+    <goobi.version>21.10</goobi.version>
   </properties>
   <distributionManagement>
     <repository>
@@ -29,12 +29,12 @@
       <artifactId>goobi-core-jar</artifactId>
       <version>${goobi.version}</version>
     </dependency>
-        <dependency>
-            <groupId>de.intranda.goobi.plugins.workflow</groupId>
-            <artifactId>aeon_process_creation-gui</artifactId>
-            <version>1.0.0</version>
-            <scope>provided</scope>
-        </dependency>    
+    <dependency>
+      <groupId>de.intranda.goobi.plugins.workflow</groupId>
+      <artifactId>aeon_process_creation-gui</artifactId>
+      <version>1.0.0</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
