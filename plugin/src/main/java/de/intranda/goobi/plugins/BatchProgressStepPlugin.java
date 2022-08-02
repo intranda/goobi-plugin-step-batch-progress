@@ -167,7 +167,7 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
         }
 
         List<Step> stepsToClose = new ArrayList<>();
-        List<Integer> processesInBatch = ProcessManager.getIDList("batchId=" + process.getBatch().getBatchId());
+        List<Integer> processesInBatch = ProcessManager.getIdsForFilter("batchId=" + process.getBatch().getBatchId());
         for (Integer processId : processesInBatch) {
             if (processId.equals(process.getId())) {
                 // skip current process
