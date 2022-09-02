@@ -13,12 +13,16 @@
       <url>https://nexus.intranda.com/repository/maven-releases</url>
     </repository>
   </distributionManagement>
-  <repositories>
-    <repository>
-      <id>intranda-public</id>
-      <url>https://nexus.intranda.com/repository/maven-public</url>
-    </repository>
-  </repositories>
+	<repositories>
+	    <repository>
+	      <id>intranda-public</id>
+	      <url>https://nexus.intranda.com/repository/maven-public</url>
+	    </repository>		
+		<repository>
+			<id>intranda-internal</id>
+			<url>https://nexus.intranda.com/repository/maven-internal</url>
+		</repository>
+	</repositories>
   <modules>
     <module>module-main</module>
     <!--     <module>module-gui</module> -->
@@ -32,7 +36,7 @@
     <dependency>
       <groupId>de.intranda.goobi.plugins.workflow</groupId>
       <artifactId>aeon_process_creation-gui</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.2-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
