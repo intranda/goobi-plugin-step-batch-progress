@@ -39,6 +39,7 @@ import org.goobi.aeon.User;
 import org.goobi.beans.Process;
 import org.goobi.beans.Processproperty;
 import org.goobi.beans.Step;
+import org.goobi.production.enums.LogType;
 import org.goobi.production.enums.PluginGuiType;
 import org.goobi.production.enums.PluginReturnValue;
 import org.goobi.production.enums.PluginType;
@@ -46,6 +47,7 @@ import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
 
 import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.HelperSchritte;
 import de.sub.goobi.persistence.managers.ProcessManager;
 import lombok.Getter;
@@ -241,6 +243,10 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
                 .post(Entity.entity(map, MediaType.APPLICATION_JSON), Map.class);
             }
 
+            log.debug("Changed status for transaction {} to {}", transactionId, newStatusName);
+
+            new Helper().addMessageToProcessLog(process.getId(), LogType.INFO,
+                    "Changed status for transaction " + transactionId + " to " + newStatusName);
         }
         // close the step in all other processes
         if (!stepsToClose.isEmpty()) {
