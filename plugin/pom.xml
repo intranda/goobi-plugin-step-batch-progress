@@ -36,7 +36,7 @@
     <dependency>
       <groupId>de.intranda.goobi.plugins.workflow</groupId>
       <artifactId>aeon_process_creation-gui</artifactId>
-      <version>1.0.2-SNAPSHOT</version>
+      <version>23.07.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
