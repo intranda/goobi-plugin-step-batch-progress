@@ -15,8 +15,8 @@ Detail                      | Description
 **Plugin identifier**       | intranda_step_batch_progress
 **Plugin type**             | step
 **Licence**                 | GPL 2.0 or newer
-**Documentation (German)**  | https://docs.goobi.io/workflow-plugins/v/eng/step/goobi-plugin-step-batch-progress
-**Documentation (English)** | https://docs.goobi.io/workflow-plugins/v/ger/step/goobi-plugin-step-batch-progress
+**Documentation (German)**  | https://docs.goobi.io/workflow-plugins/v/ger/step/goobi-plugin-step-batch-progress
+**Documentation (English)** | https://docs.goobi.io/workflow-plugins/v/eng/step/goobi-plugin-step-batch-progress
 
 ## Goobi details
 
