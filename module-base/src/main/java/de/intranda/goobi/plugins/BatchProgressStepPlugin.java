@@ -36,6 +36,7 @@ import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
 import org.apache.commons.lang.StringUtils;
 import org.goobi.aeon.LoginResponse;
 import org.goobi.aeon.User;
+import org.goobi.beans.GoobiProperty;
 import org.goobi.beans.Process;
 import org.goobi.beans.Processproperty;
 import org.goobi.beans.Step;
@@ -209,7 +210,7 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
         if (updateAeonQueue) {
             String transactionId = null;
             // get transactionNumber from process properties
-            for (Processproperty pp : process.getEigenschaften()) {
+            for (GoobiProperty pp : process.getEigenschaften()) {
                 // must match field title of field <field aeon="transactionNumber"> in aeon config
                 if (pp.getTitel().equals(propertyName)) {
                     transactionId = pp.getWert();
