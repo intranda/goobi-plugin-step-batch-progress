@@ -3,6 +3,10 @@ title: Batch Progress Plugin
 identifier: intranda_step_batch_progress
 published: true
 description: This Step Plugin for Goobi workflow allows to let all processes of one batch come to the same progress to trigger some REST call and let all processes move on their work again in parallel.
+keywords:
+    - Goobi workflow
+    - Plugin
+    - Step Plugin
 ---
 ## Introduction
 This step plugin for Goobi workflow allows multiple Goobi processes that belong to a batch but have different progress in their workflows to all wait for each other at a defined workflow step. Only when the last associated process reaches the defined workflow step does a call to a specified REST URL take place, so that all processes can then continue with their respective next workflow steps.
