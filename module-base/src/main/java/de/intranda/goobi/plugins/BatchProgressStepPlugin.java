@@ -1,6 +1,7 @@
 package de.intranda.goobi.plugins;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * This file is part of a plugin for Goobi - a Workflow tool for the support of mass digitization.
@@ -25,11 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
-
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
@@ -37,8 +33,9 @@ import org.apache.commons.lang.StringUtils;
 import org.goobi.aeon.LoginResponse;
 import org.goobi.aeon.User;
 import org.goobi.beans.GoobiProperty;
+import org.goobi.beans.JournalEntry;
+import org.goobi.beans.JournalEntry.EntryType;
 import org.goobi.beans.Process;
-import org.goobi.beans.Processproperty;
 import org.goobi.beans.Step;
 import org.goobi.production.enums.LogType;
 import org.goobi.production.enums.PluginGuiType;
@@ -48,9 +45,13 @@ import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
 
 import de.sub.goobi.config.ConfigPlugins;
-import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.HelperSchritte;
+import de.sub.goobi.persistence.managers.JournalManager;
 import de.sub.goobi.persistence.managers.ProcessManager;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
@@ -94,24 +95,9 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
         apiKey = config.getString("/global/aeon/apiKey");
         user = new User(config.getString("/global/aeon/username"), config.getString("/global/aeon/password"));
         propertyName = config.getString("/global/property");
-
-        // get config for current task
-        SubnodeConfiguration myconfig = null;
-        String projectName = process.getProjekt().getTitel();
-        try {
-            myconfig = config.configurationAt("//config[./project = '" + projectName + "'][./step = '" + step.getTitel() + "']");
-        } catch (IllegalArgumentException e) {
-            try {
-                myconfig = config.configurationAt("//config[./project = '*'][./step = '" + step.getTitel() + "']");
-            } catch (IllegalArgumentException e1) {
-                try {
-                    myconfig = config.configurationAt("//config[./project = '" + projectName + "'][./step = '*']");
-                } catch (IllegalArgumentException e2) {
-                    myconfig = config.configurationAt("//config[./project = '*'][./step = '*']");
-                }
-            }
-        }
-
+        
+        // read parameters from correct block in configuration file
+        SubnodeConfiguration myconfig = ConfigPlugins.getProjectAndStepConfig(title, step);
         updateAeonQueue = myconfig.getBoolean("updateQueue", false);
         newStatusName = myconfig.getString("queueName", "");
     }
@@ -119,9 +105,6 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
     @Override
     public PluginGuiType getPluginGuiType() {
         return PluginGuiType.NONE;
-        // return PluginGuiType.PART;
-        // return PluginGuiType.PART_AND_FULL;
-        // return PluginGuiType.NONE;
     }
 
     @Override
@@ -246,8 +229,9 @@ public class BatchProgressStepPlugin implements IStepPluginVersion2 {
 
             log.debug("Changed status for transaction {} to {}", transactionId, newStatusName);
 
-            new Helper().addMessageToProcessLog(process.getId(), LogType.INFO,
-                    "Changed status for transaction " + transactionId + " to " + newStatusName);
+            JournalEntry entry = new JournalEntry(process.getId(), new Date(), "Plugin " + title, LogType.INFO,
+            		"Changed status for transaction " + transactionId + " to " + newStatusName, EntryType.PROCESS);
+    		JournalManager.saveJournalEntry(entry);
         }
         // close the step in all other processes
         if (!stepsToClose.isEmpty()) {
